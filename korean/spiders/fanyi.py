@@ -34,7 +34,7 @@ class FanyiSpider(scrapy.Spider):
 
     def start_requests(self):
         for i in self.start_urls:
-            yield Request(url=i, callback=self.parse, headers=self.headers, meta={'keyword': self.keyword})
+            yield Request(url=i, callback=self.parse, headers=self.headers, meta={'keyword': self.keyword, 'tag': 0})
 
     #获取字幕第一页中的总页数来判断是否进行全部抓取，如果页数大于100就只爬取一百页
     def parse(self, response):
@@ -72,7 +72,21 @@ class FanyiSpider(scrapy.Spider):
                     proxies.append(fromUrl)
                 proxy = random.choice(proxies)
                 url = response.url.replace('pageNo=1', f'pageNo={str(page)}')
-                yield Request(url=url, callback=self.parse_item, headers=self.headers, meta={'proxy': proxy, 'pageNum': page},dont_filter=True)
+                dbname2 = 'koreanUrl'
+                tablename2 = 'url'
+                db2 = pymysql.connect(host, user, passwd, dbname2)
+                cursor2 = db2.cursor()
+                sql2 = f"select * from {tablename2}"
+                cursor2.execute(sql2)
+                results2 = cursor2.fetchall()
+                db2.commit()
+                cursor2.close()
+                db2.close()
+                urls = []
+                for row in results2:
+                    urls.append(row[0])
+                if url not in urls:
+                    yield Request(url=url, callback=self.parse_item, headers=self.headers, meta={'proxy': proxy, 'pageNum': page, 'tag': 0}, dont_filter=True)
 
     def parse_item(self, response):
         results = json.loads(response.text)

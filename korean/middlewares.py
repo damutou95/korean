@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from twisted.internet.error import TimeoutError,ConnectionLost
+from twisted.internet.error import TimeoutError, ConnectionLost, TCPTimedOutError, ConnectionRefusedError, ConnectError
 
 # Define here the models for your spider middleware
 #
@@ -7,8 +7,8 @@ from twisted.internet.error import TimeoutError,ConnectionLost
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
-
-
+import pymysql
+import logging
 
 
 
@@ -93,13 +93,38 @@ class KoreanDownloaderMiddleware(object):
         # - return a Response object
         # - return a Request object
         # - or raise IgnoreRequest
-        return response
+        if response.status != 200:
+            if request.meta['tag'] < 30:
+                request.meta['tag'] += 1
+                logging.info(f"""重新发送请求{request.meta['tag']}次！""")
+                return request
+            else:
+                logging.info('重试30次不成功，放弃请求！')
+        else:
+            host = '127.0.0.1'
+            user = 'root'
+            passwd = '18351962092'
+            dbname = 'koreanUrl'
+            tablename = 'url'
+            db = pymysql.connect(host, user, passwd, dbname)
+            cursor = db.cursor()
+            sql = f"insert into {tablename}(url) values('{response.url}')"
+            cursor.execute(sql)
+            db.commit()
+            cursor.close()
+            db.close()
+            return response
 
     def process_exception(self, request, exception, spider):
         # Called when a download handler or a process_request()
         # (from other downloader middleware) raises an exception.
-        if exception in [TimeoutError, ConnectionLost]:
-            return request
+        if isinstance(exception, (TimeoutError, ConnectionLost, TCPTimedOutError, ConnectionRefusedError, ConnectError)):
+            if request.meta['tag'] < 30:
+                request.meta['tag'] += 1
+                logging.info(f"""##################重新发送请求{request.meta['tag']}次！###########""")
+                return request
+            else:
+                logging.info('##############重试30次不成功，放弃请求！#############')
         # Must either:
         # - return None: continue processing this exception
         # - return a Response object: stops process_exception() chain
