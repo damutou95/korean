@@ -48,30 +48,13 @@ class FanyiSpider(scrapy.Spider):
                 pageNumneed = pageNum
             elif pageNum > 100:
                 pageNumneed = 100
-            print(pageNumneed)
-            print('4444444444444444444444')
             logging.info('#####################################################第一页完成')
             for i in range(pageNumneed):
                 page = i+1
+                url = response.url.replace('pageNo=1', f'pageNo={str(page)}')
                 host = '127.0.0.1'
                 user = 'root'
                 passwd = '18351962092'
-                dbname = 'proxies'
-                tablename = 'proxy'
-                proxies = []
-                db = pymysql.connect(host, user, passwd, dbname)
-                cursor = db.cursor()
-                sql = f"select * from {tablename}"
-                cursor.execute(sql)
-                results = cursor.fetchall()
-                cursor.close()
-                for row in results:
-                    ip = row[0]
-                    port = row[1]
-                    fromUrl = f"http://{ip}:{port}"
-                    proxies.append(fromUrl)
-                proxy = random.choice(proxies)
-                url = response.url.replace('pageNo=1', f'pageNo={str(page)}')
                 dbname2 = 'koreanUrl'
                 tablename2 = 'url'
                 db2 = pymysql.connect(host, user, passwd, dbname2)
@@ -86,7 +69,7 @@ class FanyiSpider(scrapy.Spider):
                 for row in results2:
                     urls.append(row[0])
                 if url not in urls:
-                    yield Request(url=url, callback=self.parse_item, headers=self.headers, meta={'proxy': proxy, 'pageNum': page, 'tag': 0}, dont_filter=True)
+                    yield Request(url=url, callback=self.parse_item, headers=self.headers, meta={'pageNum': page, 'tag': 0}, dont_filter=True)
 
     def parse_item(self, response):
         results = json.loads(response.text)
@@ -98,7 +81,6 @@ class FanyiSpider(scrapy.Spider):
             item['cn'] = list['foSubtitle'].replace('<b>', '').replace('</b>', '').replace(r"\"", "\"").replace("\"", r"\"").replace(r"\'", "'").replace("'", r"\'")
             item['video'] = list['videoTitle'].replace(r"\"", "\"").replace("\"", r"\"").replace(r"\'", "'").replace("'", r"\'")
             logging.info('#####################################成功读取一条翻译#####################################')
-            print(item)
             yield item
         logging.info(f"#####################################################成功爬取了第{str(response.meta['pageNum'])}页")
 

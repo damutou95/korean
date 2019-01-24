@@ -64,6 +64,7 @@ SPIDER_MIDDLEWARES={'scrapy_splash.SplashDeduplicateArgsMiddleware': 100}
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'korean.middlewares.KoreanDownloaderMiddleware': 543,
+    'korean.middlewares.HttpProxyMiddleware': 300,
  }
 
 # Enable or disable extensions
