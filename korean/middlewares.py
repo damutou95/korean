@@ -155,6 +155,11 @@ class HttpProxyMiddleware(object):
             port = row[1]
             fromUrl = f"http://{ip}:{port}"
             proxies.append(fromUrl)
-        proxy = random.choice(proxies)
-        request.meta['proxy'] = proxy
+        try:
+            proxy = random.choice(proxies)
+            request.meta['proxy'] = proxy
+        except IndexError:
+            proxy = random.choice(proxies)
+            request.meta['proxy'] = proxy
+
         # request.meta['proxy'] = 'http://' + proxy_ip

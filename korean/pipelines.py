@@ -40,6 +40,8 @@ class KoreanPipeline(object):
         try:
             sql = f"""insert into fanyi(en,cn,kr,video,hashCode,crawlTime,spider) values("{item['en']}","{item['cn']}","{item['kr']}","{item['video']}","{hashCode}","{time.strftime('%Y-%m-%d',time.localtime())}","fanyi")"""
             cursor.execute(sql)
+            logging.info('################成功存入数据！####################')
+
         except InternalError:
             logging.info("################成功过滤emoji！###############")
         except IntegrityError:
