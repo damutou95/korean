@@ -68,6 +68,7 @@ class FanyiSpider(scrapy.Spider):
                 urls = []
                 for row in results2:
                     urls.append(row[0])
+                #如果链接内容已经爬取过，那么不爬
                 if url not in urls:
                     yield Request(url=url, callback=self.parse_item, headers=self.headers, meta={'pageNum': page, 'tag': 0}, dont_filter=True)
 
